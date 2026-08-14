@@ -1,0 +1,100 @@
+- Qwen/Qwen3-0.6B (default)
+- Large Language Models (LLMs)
+- Function calling enables LLMs to:
+	• Interact with external systems: Call APIs, query databases, control devices
+	• Execute code: Perform calculations, data transformations, file operations
+	• Chain operations: Break complex tasks into executable steps
+	• Provide structured output: Generate JSON, XML, or other machine-readable
+	    formats
+	• Extract structured data from unstructured text: For example, given a large
+	    book, extract fields such as {protagonist name, protagonist sex, protagonist
+	    age}
+- constrained decoding
+- Function Calling
+- Tokenization
+- imbeding
+- Logits
+- autoregression(autoregressive modle)
+- JSON Schema
+- LLM SDK
+- Finite State Machine (FSM)
+- Function Selection
+- Argument Extraction
+- Output Validation
+- Prompt > Tokenizer > Input IDs > LLM > Logits > Choose next token > Repeat(generation pipeline)
+- api(brief)
+
+
+
+
+
+
+====================================================================================
+
+====================================================================================
+
+====================================================================================
+
+====================================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import numpy as np
+
+logits = np.array(logits)              # convert list[float] -> ndarray
+mask = np.full(len(logits), -np.inf)   # np.full(shape, fill_value)
+mask[valid_tokens] = logits[valid_tokens]   # valid_tokens: list/array of int indices
+next_token_id = int(np.argmax(mask))
+
+
+
+
+
+
+
+- src/
+  │
+  ├── __init__.py
+  ├── __main__.py
+  ├── parser.py reads and validates the input JSON files.
+  ├── models.py contains your Pydantic models.
+  ├── decoder.py implements the constrained decoding logic.
+  ├── generator.py performs token-by-token generation.
+  ├── validator.py checks the generated JSON against the function schema.
+  └── output.py writes the final results.
+
+
+Parser: (wip)
+    - load functions_definition.json
+    - Open file > json.load() > list[dict] > Pydantic validation > list[FunctionDefinition]
+    - load function_calling_tests.json
+    - Open file > json.load() > list[dict] > list[Prompt]
+    - Errors:
+        - File doesn't exist
+        - FileNotFoundError
+        - Invalid JSON
+        - json.JSONDecodeError
+        - JSON structure is wrong
+        - Pydantic ValidationError
+        - permission error
+
+generator: (wip)
+    - encode: prompt ---> token_ids
+    - 
