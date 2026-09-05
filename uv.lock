@@ -2,8 +2,8 @@ version = 1
 revision = 3
 requires-python = ">=3.10"
 resolution-markers = [
-    "python_full_version < '3.12'",
     "python_full_version >= '3.12'",
+    "python_full_version < '3.12'",
 ]
 
 [[package]]
@@ -228,8 +228,6 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "huggingface-hub" },
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "numpy", version = "2.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "pydantic" },
     { name = "torch" },
     { name = "transformers" },
@@ -238,7 +236,6 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "huggingface-hub", specifier = ">=0.20.0" },
-    { name = "numpy", specifier = ">=2.2.6" },
     { name = "pydantic", specifier = ">=2.13.4" },
     { name = "torch", specifier = ">=2.0.0" },
     { name = "transformers", specifier = ">=4.40.0" },
