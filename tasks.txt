@@ -1,5 +1,5 @@
-- Qwen/Qwen3-0.6B (default)
-- Large Language Models (LLMs)
+- Qwen/Qwen3-0.6B (default) -> d
+- Large Language Models (LLMs) -> d
 - Function calling enables LLMs to:
 	• Interact with external systems: Call APIs, query databases, control devices
 	• Execute code: Perform calculations, data transformations, file operations
@@ -9,13 +9,13 @@
 	• Extract structured data from unstructured text: For example, given a large
 	    book, extract fields such as {protagonist name, protagonist sex, protagonist
 	    age}
-- constrained decoding
+- constrained decoding -> og
 - Function Calling
-- Tokenization
-- imbeding
-- Logits
+- Tokenization -> d
+- embedding -> d
+- Logits -> d
 - autoregression(autoregressive modle)
-- JSON Schema
+- JSON Schema -> d
 - LLM SDK
 - Finite State Machine (FSM)
 - Function Selection

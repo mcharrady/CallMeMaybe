@@ -1,7 +1,7 @@
 """."""
 from llm_sdk import Small_LLM_Model
-from .models import FunctionDef
-import decoder
+from .models import FunctionDef, FunCall
+from . import decoder
 
 
 def get_candidates(
@@ -49,7 +49,7 @@ def generate(
         model: Small_LLM_Model, prompt: str,
         function_defs: list[FunctionDef],
         max_tokens: int = 256
-    ) -> str:
+    ) -> FunCall:
     """."""
     input_ids: list[int] = model.encode(prompt).tolist()[0]
     candidates = get_candidates(function_defs, model)
@@ -67,11 +67,11 @@ def generate(
 
     generate_ids = name_progress[:]
 
-    plan = decoder.build_skeleton_plan(chosen_def, model)###############
+    plan = decoder.build_skeleton_plan(chosen_def, model)
     plan_index = 0
     value_buffer = ""
 
-    while not decoder.is_complete(plan, plan_index): ###############
+    while not decoder.is_complete(plan, plan_index):
         piece = plan[plan_index]
 
         if isinstance(piece, list):
@@ -82,13 +82,13 @@ def generate(
         logits = model.get_logits_from_input_ids(input_ids + generate_ids)
         allowed = decoder.get_valid_token_ids(
             plan, plan_index, value_buffer, model
-            )###############
+            )
         next_token = pick_highest(logits, allowed)
 
         generate_ids.append(next_token)
         value_buffer += model.decode([next_token])
 
-        if decoder.value_is_complete(value_buffer, piece):###############
+        if decoder.value_is_complete(value_buffer, piece):
             plan_index += 1
             value_buffer = ""
 
@@ -100,4 +100,4 @@ def generate(
         model.decode([t]) for t in generate_ids[len(name_progress):]
     )
 
-    return decoder.build_final_json(chosen_def, prompt, raw_params_text)###############
+    return decoder.build_final_json(chosen_def, prompt, raw_params_text)

@@ -9,4 +9,6 @@
 # print(tokens)
 
 
-
+list1 = [1, 2]
+list2 = []
+print(float("0.2e2"))

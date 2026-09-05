@@ -2,10 +2,6 @@ import json
 from .models import Prompt, FunctionDef
 
 
-promfile = "data/input/function_calling_tests.json"
-funcfile = "data/input/functions_definition.json"
-
-
 def json_to_data(path: str) -> list[dict]:
         with open(path) as file:
             data: list[dict] = json.load(file)
@@ -13,8 +9,8 @@ def json_to_data(path: str) -> list[dict]:
 
 
 def parse_data(
-        promfile: str = promfile,
-        funcfile: str = funcfile
+        promfile: str,
+        funcfile: str
         ) -> tuple[list[Prompt], list[FunctionDef]]:
     tests = json_to_data(promfile)
     funcs = json_to_data(funcfile)
