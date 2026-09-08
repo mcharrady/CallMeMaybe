@@ -40,16 +40,28 @@
 
 
 
+Function: fn_substitute_string_with_regex\n"
+        "User Request: Replace 'blue' with 'red' in 'the blue sky'\n"
+        "Function call: fn_substitute_string_with_regex{\"source_string\":\"the blue sky\",\"regex\":\"blue\",\"replacement\":\"red\"}
+
+
+
+raw_params_text = "".join(
+        model.decode([t]) for t in generate_ids[len(name_progress):]
+    )
 
 
 
 
-
-
-
-
-
-
+"Extract parameters in JSON format.\n\n"
+        "Example:\n"
+        "Function: fn_add_numbers\n"
+        "User Request: Add 5 and 3\n"
+        "Function call: fn_add_numbers{\"a\":5,\"b\":3}\n\n"
+        f"Function: {chosen_def.name}\n"
+        f"Description: {chosen_def.description}\n"
+        f"User Request: {prompt}\n"
+        "Function call: "
 
 
 

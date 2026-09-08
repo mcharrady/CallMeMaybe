@@ -1,6 +1,6 @@
 """."""
 from llm_sdk import Small_LLM_Model
-from .models import FunctionDef, FunCall
+from .models import FunctionDef, FunCall, ValType
 from . import decoder
 
 
@@ -48,22 +48,47 @@ def pick_highest(logits: list[float], allowed: set[int]) -> int:
 def generate(
         model: Small_LLM_Model, prompt: str,
         function_defs: list[FunctionDef],
+        fun_c_ontext: str,
         max_tokens: int = 256
     ) -> FunCall:
     """."""
-    input_ids: list[int] = model.encode(prompt).tolist()[0]
+    full_input = (
+        "Choose the correct function for the user.\n\n"
+        f"Available functions:\n{fun_c_ontext}\n\n"
+        "Example:\n"
+        "(User Request: Add 5 and 3\n"
+        "Function Name: fn_add_numbers)\n\n"
+        f"\n\nUser Request: {prompt}\nFunction call:"
+        )
+    input_ids: list[int] = model.encode(full_input).tolist()[0]
     candidates = get_candidates(function_defs, model)
     name_progress: list[int] = []
 
     while selected_function(candidates, name_progress) is None:
         logits = model.get_logits_from_input_ids(input_ids + name_progress)
         allowed = valid_next_tokens(candidates, name_progress)
+        print([model.decode([t]) for t in allowed])
         next_token = pick_highest(logits, allowed)
         name_progress.append(next_token)
+        
+        print(model.decode(name_progress))
 
     chosen_def = selected_function(candidates, name_progress)
     if chosen_def is None:
         raise RuntimeError("phase 1 exited without selecting a function")
+
+    param_prom = (
+        "Extract parameters in JSON format.\n\n"
+        "Example:\n"
+        "Function: fn_add_numbers\n"
+        "User Request: Add 5 and 3\n"
+        "Function call: fn_add_numbers{\"a\":5,\"b\":3}\n\n"
+        f"Function: {chosen_def.name}\n"
+        f"User Request: {prompt}\n"
+        "Function call: "
+    )
+
+    input_ids = model.encode(param_prom).tolist()[0]
 
     generate_ids = name_progress[:]
 
@@ -85,8 +110,16 @@ def generate(
             )
         next_token = pick_highest(logits, allowed)
 
+        if piece not in (ValType.STRING, ValType.BOOLEAN):
+            next_piece = plan[plan_index + 1]
+            if next_token == next_piece[0]:
+                plan_index += 1
+                value_buffer = ""
+                continue
+
         generate_ids.append(next_token)
         value_buffer += model.decode([next_token])
+        print(value_buffer)
 
         if decoder.value_is_complete(value_buffer, piece):
             plan_index += 1

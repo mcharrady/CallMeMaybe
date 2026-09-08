@@ -2,7 +2,8 @@
 import argparse
 import sys
 from llm_sdk import Small_LLM_Model
-from . import parser, generator, output, models
+from . import generator, output, parser
+from .models import FunCall
 
 
 def parse_args() -> argparse.Namespace:
@@ -23,9 +24,15 @@ def main() -> None:
     prompts, func_defs = parser.parse_data(
         args.input, args.functions_definition
     )
+    fun_c_ontext = "\n".join(
+        (f"- {fn.name}({', '.join(fn.parameters)})"
+         f": {fn.description}")
+        for fn in func_defs
+    )
+    print("hi")
     model = Small_LLM_Model()
-    results : list[models.FunCall] = [
-        generator.generate(model, prompt.prompt, func_defs)
+    results : list[FunCall] = [
+        generator.generate(model, prompt.prompt, func_defs, fun_c_ontext)
         for prompt in prompts
     ]
 
@@ -37,4 +44,7 @@ if __name__ == "__main__":
         main()########################
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except KeyboardInterrupt:
+        print(f"Error: Program interupted")
         sys.exit(1)

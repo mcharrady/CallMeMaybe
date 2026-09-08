@@ -1,14 +1,19 @@
-# from llm_sdk import Small_LLM_Model
-# from typing import cast
-# def to() -> tuple[list[int], int]:
-#     llm = Small_LLM_Model()
-#     prompt = "ouhqbdovbwjbdfbq"
-#     return (llm.encode(prompt).tolist()[0], 1)
-# tokens = to()
-# print(type(tokens))
-# print(tokens)
+list1 = [0,1,2,3,4,5,6,7,8]
+print(list1[:-3])
 
 
-list1 = [1, 2]
-list2 = []
-print(float("0.2e2"))
+"Extract parameters in JSON format.\n\n"
+"Example 1:\n"
+"Function: fn_add_numbers\n"
+"User Request: Add 5 and 3\n"
+"Function call: fn_add_numbers{\"a\":5,\"b\":3}\n\n"
+"Example 2:\n"
+"Function: fn_substitute_string_with_regex\n"
+"User Request: Replace digits in 'Hello 123' with 'X'\n"
+"Function call: fn_substitute_string_with_regex{\"source_string\":\"Hello 123\",\"regex\":\"[0-9]+\",\"replacement\":\"X\"}\n\n"
+f"Function: {chosen_def.name}\n"
+f"Description: {chosen_def.description}\n"
+f"Parameters: {', '.join(f'{k}: {v.type.name}' for k, v in chosen_def.parameters.items())}\n"
+f"User Request: {prompt}\n"
+"Function call: "
+

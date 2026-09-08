@@ -1,6 +1,6 @@
 UV_CACHE_DIR = /goinfre/$(USER)/uv-cache
 HF_HOME = /goinfre/$(USER)/hf-home
-PY = python3
+PY = python
 export UV_CACHE_DIR
 export HF_HOME
 

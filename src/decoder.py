@@ -36,10 +36,10 @@ def build_skeleton_plan(
     """."""
     plan: SkeletonPlan = []
     for piece in build_skeleton(chosen_def):
-        if isinstance(piece, str):
-            plan.append(model.encode(piece).tolist()[0])
-        else:
+        if isinstance(piece, ValType):
             plan.append(piece)
+        else:
+            plan.append(model.encode(piece).tolist()[0])
     return plan
 
 
@@ -56,8 +56,7 @@ def value_is_complete(buffer: str, val_type: ValType) -> bool:
                 and buffer.endswith('"'))
     if val_type == ValType.BOOLEAN:
         return buffer in BOOL_LITERALS
-    digits = buffer.lstrip("-")
-    return digits != "" and digits[-1].isdigit()
+    return False
 
 
 def char_token_ids(model: Small_LLM_Model) -> dict[str, int]:
@@ -65,7 +64,7 @@ def char_token_ids(model: Small_LLM_Model) -> dict[str, int]:
     global _char_id_cache
     if _char_id_cache is None:
         _char_id_cache = {
-            c: model.encode(c).tolist[0][0]
+            c: model.encode(c).tolist()[0][0]
             for c in NUMBER_CHARS
             }
     return _char_id_cache
@@ -75,12 +74,13 @@ def str_vocab(model: Small_LLM_Model) -> tuple[set[int], set[int]]:
     """."""
     global _str_vocab_cache
     if _str_vocab_cache is None:
-        quote_ids = set(model.encode('"').tolist()[0][0])
+        quote_ids = set(model.encode('"').tolist()[0])
         with open(model.get_path_to_vocab_file()) as f:
             raw: dict[str, str] = json.load(f)
         body_ids = {
-            int(tid) for tid, text in raw.items()
+            int(tid) for text, tid in raw.items()
             if text and '"' not in text and "\\" not in text
+            and "\n" not in text
         }
         _str_vocab_cache = (quote_ids, body_ids)
     return _str_vocab_cache
@@ -108,16 +108,31 @@ def bool_candidates(buffer: str, model: Small_LLM_Model) -> set[int]:
     }
 
 
+def is_repeating(buffer: str) -> bool:
+    """."""
+    n = len(buffer)
+    for length in range(5, 20):
+        if n >= 2 * length:
+            tail = buffer[-length:]
+            if tail in buffer[:-length]:
+                return True
+    return False
+
+
 def str_candidates(buffer: str, model: Small_LLM_Model) -> set[int]:
     """."""
     quote_ids, body_ids = str_vocab(model)
-    return quote_ids if buffer == "" else quote_ids | body_ids
+    if buffer == "":
+        return quote_ids
+    if len(buffer) > 60:
+        return quote_ids
+    return quote_ids | body_ids
 
 
 def get_valid_token_ids(
         plan: SkeletonPlan, index: int, buffer: str,
         model: Small_LLM_Model
-    ) -> set[int]:
+    ) -> set[int]:#(wip)
     """."""
     val_type = plan[index]
     assert isinstance(val_type, ValType)
@@ -126,14 +141,20 @@ def get_valid_token_ids(
     if val_type == ValType.BOOLEAN:
         return bool_candidates(buffer, model)
     if val_type == ValType.NUMBER:
-        return number_candidates(buffer, model, True)
-    return number_candidates(buffer, model)
+        allowed = number_candidates(buffer, model, True)
+    else:
+        allowed = number_candidates(buffer, model)
+    next_piece = plan[index + 1]
+    if buffer.lstrip("-") != "" and isinstance(next_piece, list):
+        allowed.add(next_piece[0])
+    return allowed
 
 
 def build_final_json(
         chosen_def: FunctionDef, prompt: str, raw_params_text: str
     ) -> FunCall:
     """."""
+    print(repr(raw_params_text))
     parameters: dict[str, Any] = json.loads(raw_params_text)
     result = FunCall(
         prompt=prompt,
