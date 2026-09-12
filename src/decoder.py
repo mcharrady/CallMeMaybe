@@ -49,6 +49,8 @@ def is_complete(plan: SkeletonPlan, index: int) -> bool:
 
 
 def value_is_complete(buffer: str, val_type: ValType) -> bool:
+
+    
     """."""
     if val_type == ValType.STRING:
         return (len(buffer) >= 2
@@ -77,11 +79,16 @@ def str_vocab(model: Small_LLM_Model) -> tuple[set[int], set[int]]:
         quote_ids = set(model.encode('"').tolist()[0])
         with open(model.get_path_to_vocab_file()) as f:
             raw: dict[str, str] = json.load(f)
-        body_ids = {
-            int(tid) for text, tid in raw.items()
-            if text and '"' not in text and "\\" not in text
-            and "\n" not in text
-        }
+        body_ids = set()
+        for tid_str in raw.values():
+            tid = int(tid_str)
+            decoded = model.decode([tid])
+            if (
+                decoded and '"' not in decoded
+                and "\\" not in decoded and "\n" not in decoded
+                and "{" not in decoded and "}" not in decoded
+                ):
+                body_ids.add(tid)
         _str_vocab_cache = (quote_ids, body_ids)
     return _str_vocab_cache
 
@@ -119,25 +126,29 @@ def is_repeating(buffer: str) -> bool:
     return False
 
 
-def str_candidates(buffer: str, model: Small_LLM_Model) -> set[int]:
+def str_candidates(
+        buffer: str, model: Small_LLM_Model, regex_param: bool
+        ) -> set[int]:
     """."""
     quote_ids, body_ids = str_vocab(model)
     if buffer == "":
         return quote_ids
-    if len(buffer) > 60:
+    if len(buffer) > 60 or is_repeating(buffer):
+        return quote_ids
+    if regex_param and buffer[-1] in '+*])}':
         return quote_ids
     return quote_ids | body_ids
 
 
 def get_valid_token_ids(
         plan: SkeletonPlan, index: int, buffer: str,
-        model: Small_LLM_Model
+        model: Small_LLM_Model, regex_param: bool
     ) -> set[int]:#(wip)
     """."""
     val_type = plan[index]
     assert isinstance(val_type, ValType)
     if val_type == ValType.STRING:
-        return str_candidates(buffer, model)
+        return str_candidates(buffer, model, regex_param)
     if val_type == ValType.BOOLEAN:
         return bool_candidates(buffer, model)
     if val_type == ValType.NUMBER:
@@ -156,6 +167,10 @@ def build_final_json(
     """."""
     print(repr(raw_params_text))
     parameters: dict[str, Any] = json.loads(raw_params_text)
+    for name, value in chosen_def.parameters.items():
+        if value.type == ValType.NUMBER:
+            parameters[name] = float(parameters[name])
+    print(parameters)
     result = FunCall(
         prompt=prompt,
         name=chosen_def.name,

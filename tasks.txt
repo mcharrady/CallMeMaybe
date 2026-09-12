@@ -110,3 +110,71 @@ Parser: (wip)
 generator: (wip)
     - encode: prompt ---> token_ids
     - 
+
+
+
+
+You are a function-calling JSON object builder.
+
+Given a user request, generate a JSON object with exactly these keys:
+
+- "prompt": the original user request.
+- "name": the function to call.
+- "parameters": all required arguments with the correct values and types.
+
+Rules:
+
+- To select the function, read the descriptions of all available functions and choose the one whose description best matches the user's request. Do not choose a function based only on its name.
+- After selecting the function, the parameter names and types are already known from its definition.
+- Your task is only to determine the correct value for each parameter.
+- Use the function description, parameter definition, and the user's request to infer every parameter value.
+- Return values that match the required parameter types.
+
+Available functions:
+
+
+
+
+
+
+
+
+[
+  {
+    "prompt": "What is the sum of 2 and 3?"
+  },
+  {
+    "prompt": "What is the sum of 265 and 345?"
+  },
+  {
+    "prompt": "Greet shrek"
+  },
+  {
+    "prompt": "Greet john"
+  },
+  {
+    "prompt": "Reverse the string 'hello'"
+  },
+  {
+    "prompt": "Reverse the string 'world'"
+  },
+  {
+    "prompt": "What is the square root of 16?"
+  },
+  {
+    "prompt": "Calculate the square root of 144"
+  },
+  {
+    "prompt": "Replace all numbers in \"Hello 34 I'm 233 years old\" with NUMBERS"
+  },
+  {
+    "prompt": "Replace all vowels in 'Programming is fun' with asterisks"
+  },
+  {
+    "prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'"
+  }
+]
+
+
+
+

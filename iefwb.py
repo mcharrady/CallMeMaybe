@@ -1,19 +1,45 @@
-list1 = [0,1,2,3,4,5,6,7,8]
-print(list1[:-3])
-
-
-"Extract parameters in JSON format.\n\n"
-"Example 1:\n"
-"Function: fn_add_numbers\n"
-"User Request: Add 5 and 3\n"
-"Function call: fn_add_numbers{\"a\":5,\"b\":3}\n\n"
-"Example 2:\n"
-"Function: fn_substitute_string_with_regex\n"
-"User Request: Replace digits in 'Hello 123' with 'X'\n"
-"Function call: fn_substitute_string_with_regex{\"source_string\":\"Hello 123\",\"regex\":\"[0-9]+\",\"replacement\":\"X\"}\n\n"
-f"Function: {chosen_def.name}\n"
-f"Description: {chosen_def.description}\n"
-f"Parameters: {', '.join(f'{k}: {v.type.name}' for k, v in chosen_def.parameters.items())}\n"
-f"User Request: {prompt}\n"
-"Function call: "
-
+prompt = "sum of 2 and 3"
+chosen_def = "fn_add_number"
+param_prom :list[str] = [
+        "Generate a valid JSON object with exactly three keys: prompt, ",
+        "name (the chosen function), and parameters. ",
+        "You must choose the function whose description best matches the ",
+        "user's request. ",
+        "Rules: ",
+        '- If the request says "replace all numbers", use regex "[0-9]+". ',
+        "Example output: ",
+        '{"prompt":"Compute the sum of 15 and 27",',
+        '"name":"fn_add_numbers",',
+        '"parameters":{"a":15,"b":27}} ',
+        "Example 2: ",
+        '{"prompt":"Replace every sequence of digits in \'Order 512 ',
+        "costs 49 dollars' with <NUM>",
+        ',"name":"fn_substitute_string_with_regex",',
+        '"parameters":{',
+        '"source_string":"Order 512 costs 49 dollars",',
+        '"regex":"[0-9]+",',
+        '"replacement":"<NUM>"',
+        '}} ',
+        "Example 3: ",
+        '{"prompt":"Replace every vowel in \'Artificial Intelligence\' ',
+        '"with *",',
+        '"name":"fn_substitute_string_with_regex",',
+        '"parameters":{',
+        '"source_string":"Artificial Intelligence",',
+        '"regex":"[AEIOUaeiou]",',
+        '"replacement":"*"',
+        '}} ',
+        "Example 4: ",
+        '{"prompt":"Replace every occurrence of \'apple\' with \'orange\' ',
+        "in 'apple pie and apple juice'",
+        '"name":"fn_substitute_string_with_regex",',
+        '"parameters":{',
+        '"source_string":"apple pie and apple juice",',
+        '"regex":"apple",',
+        '"replacement":"orange"',
+        '}} ',
+        '{"prompt":"',prompt,'",',
+        '"name":"',chosen_def,'",',
+        '"parameters":'
+    ]
+print("".join(param_prom))
