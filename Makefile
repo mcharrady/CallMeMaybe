@@ -7,7 +7,7 @@ export HF_HOME
 .PHONY: run install debug lint clean
 
 run:
-	uv run $(PY) -m src
+	uv run $(PY) -m src $(ARGS)
 
 install:
 	pip install uv

@@ -10,18 +10,16 @@
 	    book, extract fields such as {protagonist name, protagonist sex, protagonist
 	    age}
 - constrained decoding -> og
-- Function Calling
+- Function Calling -> d
 - Tokenization -> d
 - embedding -> d
 - Logits -> d
-- autoregression(autoregressive modle)
+- autoregression(autoregressive model)
 - JSON Schema -> d
 - LLM SDK
 - Finite State Machine (FSM)
 - Function Selection
-- Argument Extraction
-- Output Validation
-- Prompt > Tokenizer > Input IDs > LLM > Logits > Choose next token > Repeat(generation pipeline)
+- Prompt > Tokenizer > Input IDs > transformer > Logits > Choose next token > Repeat(generation pipeline)
 - api(brief)
 
 
@@ -178,3 +176,17 @@ Available functions:
 
 
 
+ ids = char_token_ids(model)
+    allowed = set("0123456789")
+    if buffer == "":
+        allowed.add("-")
+    if allow_dot and "." not in buffer.lstrip("-"):
+        allowed.add(".")
+    return {ids[c] for c in allowed}
+
+
+
+
+
+
+# TO HANDLE:

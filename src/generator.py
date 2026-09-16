@@ -1,4 +1,4 @@
-"""."""
+"""Generate constrained function calls using the language model."""
 from llm_sdk import Small_LLM_Model
 from .models import FunctionDef, FunCall, ValType
 from . import decoder
@@ -6,8 +6,18 @@ from . import decoder
 
 def get_candidates(
         function_defs: list[FunctionDef], model: Small_LLM_Model
-    ) -> list[tuple[FunctionDef, list[int]]]:
-    """."""
+        ) -> list[tuple[FunctionDef, list[int]]]:
+    """Encode available function names into candidate token sequences.
+
+    Args:
+        function_defs: The available function definitions from which the
+            model must select a function.
+        model: The language model used to tokenize function names.
+    
+    Returns:
+        A list of pairs where each pair contains a function
+            definition and the token IDs representing its name.
+    """
     return [
         (fn, model.encode(fn.name).tolist()[0])
         for fn in function_defs
@@ -17,31 +27,61 @@ def get_candidates(
 def valid_next_tokens(
         candidates: list[tuple[FunctionDef, list[int]]],
         progress: list[int]
-    ) -> set[int]:
-    """."""
+        ) -> set[int]:
+    """Determine the tokens that can validly continue the current
+    function name.
+
+    Args:
+        candidates: Function definitions paired with their encoded token
+            sequences.
+        progress: Token IDs already generated for the function name.
+
+    Returns:
+        a set of Token IDs that can continue at least one candidate 
+            function name
+    """
     still_possible = [
         (fn, token_ids) for fn, token_ids in candidates
         if token_ids[:len(progress)] == progress
     ]
-    return {token_ids[len(progress)] for fn, token_ids in still_possible}
+    return {token_ids[len(progress)] for _, token_ids in still_possible}
 
 
 def selected_function(
         candidates: list[tuple[FunctionDef, list[int]]],
         progress: list[int]
-    ) -> FunctionDef | None:
-    """."""
+        ) -> FunctionDef | None:
+    """Determine whether the current token sequence selects one function.
+    
+    Args:
+        candidates: Function definitions paired with their encoded token
+            sequences.
+        progress: Token IDs currently generated for the function name.
+
+    Returns:
+        The uniquely selected function definition when the progress
+            matches exactly one candidate; otherwise 'None'.
+    """
     still_possible = [
         (fn, t) for fn, t in candidates
         if t[:len(progress)] == progress
     ]
-    if len(still_possible) == 1 and still_possible[0][1] == progress:
-        return still_possible[0][0]
+    exact = [fn for fn, t in still_possible if t == progress]
+    if len(exact) == 1:
+        return exact[0]
     return None
 
 
 def pick_highest(logits: list[float], allowed: set[int]) -> int:
-    """."""
+    """Select the highest-scoring token from the allowed token set.
+    
+    Args:
+        logits: Model-generated scores for the vocabulary tokens.
+        allowed: Set of token IDs that are valid at the current generation
+            step.
+    Returns:
+        The token ID with the highest logit among the allowed tokens.
+    """
     return max(allowed, key=lambda i: logits[i])
 
 
@@ -50,8 +90,27 @@ def generate(
         function_defs: list[FunctionDef],
         fun_c_ontext: str,
         max_tokens: int = 256
-    ) -> FunCall:
-    """."""
+        ) -> FunCall:
+    """Generate a validated function call for a natural-language prompt.
+    
+    Args:
+        model: Language model used for tokenization, logits generation, and
+            token decoding.
+        prompt: Natural-language request that should be converted into a
+            function call.
+        function_defs: Available function definitions that the model may
+            select.
+        fun_c_ontext: Textual description of the available functions included
+            in the model prompt.
+        max_tokens: Maximum number of tokens allowed during parameter
+            generation. Defaults to 256.
+    
+    Returns:
+        A FunCall:
+            the generated and validated function call containing the
+            original prompt, selected function name, and generated
+            parameters.
+    """
     full_input = (
         "Choose the correct function for the user.\n\n"
         f"Available functions:\n{fun_c_ontext}\n\n"
@@ -67,23 +126,23 @@ def generate(
     while selected_function(candidates, name_progress) is None:
         logits = model.get_logits_from_input_ids(input_ids + name_progress)
         allowed = valid_next_tokens(candidates, name_progress)
-        print([model.decode([t]) for t in allowed])
         next_token = pick_highest(logits, allowed)
         name_progress.append(next_token)
-        
-        print(model.decode(name_progress))
 
     chosen_def = selected_function(candidates, name_progress)
     if chosen_def is None:
         raise RuntimeError("phase 1 exited without selecting a function")
 
-    param_prom :list[str] = [
+    param_prom: list[str] = [
         "Generate a valid JSON object with the parameters of ",
         "the chosen function.",
-        "You must choose the correct function parameter values from the prompt",
+        "You must choose the correct "
+        "function parameter values from the prompt",
         "Rules: ",
-        '- If the prompt says "replace all numbers", just use "[0-9]+" (DO NOT ADD ANY THING, THIS IS ENOUGH) for regex, nothing more.',
-        '- If the prompt says "Substitute the word cat", just use "cat" for regex, nothing more.',
+        '- If the prompt says "replace all numbers", just use "[0-9]+" ',
+        '(DO NOT ADD ANY THING, THIS IS ENOUGH) for regex, nothing more.',
+        '- If the prompt says "Substitute the word cat", ',
+        'just use "cat" for regex, nothing more.',
         "Example output: ",
         '{"prompt":"Compute the sum of 15 and 27",',
         '"name":"fn_add_numbers",',
@@ -106,8 +165,8 @@ def generate(
         '"regex":"apple",',
         '"replacement":"orange"',
         '}} ',
-        '{"prompt":"',prompt,'",',
-        '"name":"',chosen_def.name,'",',
+        '{"prompt":"', prompt, '",',
+        '"name":"', chosen_def.name, '",',
         '"parameters":'
     ]
 
@@ -122,7 +181,6 @@ def generate(
 
     while not decoder.is_complete(plan, plan_index):
         piece = plan[plan_index]
-        
 
         if isinstance(piece, list):
             if "regex" in model.decode(piece):
@@ -147,9 +205,7 @@ def generate(
                 continue
 
         generate_ids.append(next_token)
-        print(model.decode(generate_ids))
         value_buffer += model.decode([next_token])
-        print(value_buffer)
 
         if decoder.value_is_complete(value_buffer, piece):
             plan_index += 1
